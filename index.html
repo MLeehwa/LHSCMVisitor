@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Management System</title>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-building logo-icon"></i>
+                <h1 class="logo-text">Visitor Management System</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container">
+        <!-- 위치 상태 카드 -->
+        <div class="card">
+            <div class="location-status">
+                <div class="location-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="location-info">
+                    <h3>Current Location</h3>
+                    <p id="location-status">Detecting location...</p>
+                </div>
+                <div class="location-actions">
+                    <div id="location-badge" class="location-badge hidden">
+                        <i class="fas fa-check-circle"></i>
+                        Location Detected
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="refresh-gps-btn" class="btn btn-sm btn-primary">
+                            <i class="fas fa-satellite-dish"></i>
+                            Refresh GPS
+                        </button>
+                        <button id="manual-location-btn" class="btn btn-sm btn-secondary hidden">
+                            <i class="fas fa-edit"></i>
+                            Change
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 액션 버튼들 -->
+        <div class="grid grid-2">
+            <!-- Check-in Button -->
+            <div class="card text-center">
+                <button id="checkin-btn" class="btn btn-success btn-large">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Check In</span>
+                </button>
+                <p class="mt-3 text-gray-600">Check in visitors</p>
+            </div>
+
+            <!-- Check-out Button -->
+            <div class="card text-center">
+                <button id="checkout-btn" class="btn btn-danger btn-large">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Check Out</span>
+                </button>
+                <p class="mt-3 text-gray-600">Check out visitors</p>
+            </div>
+        </div>
+
+        <!-- Admin Access Button -->
+        <div class="text-center mt-8">
+            <button id="admin-btn" class="btn btn-outline btn-lg">
+                <i class="fas fa-cog"></i>
+                Admin Access
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Check-in Modal -->
+    <div id="checkin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-sign-in-alt" style="color: #22c55e;"></i>
+                    Visitor Check-in
+                </h3>
+                <button class="modal-close" onclick="hideModal('checkin-modal')">&times;</button>
+            </div>
+            <form id="checkin-form">
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Company</label>
+                    <input type="text" name="company" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purpose of Visit</label>
+                    <select name="purpose" class="form-select">
+                        <option value="">Select purpose</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="delivery">Delivery</option>
+                        <option value="inspection">Inspection</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <!-- Frequent Visitors Section -->
+                <div id="frequent-visitors-section" class="form-group hidden">
+                    <label class="form-label">
+                        <i class="fas fa-star" style="color: #f59e0b;"></i>
+                        Frequent Visitors
+                    </label>
+                    <div id="frequent-visitors-list" class="grid grid-1 gap-2">
+                        <!-- Frequent visitors list will be displayed here -->
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-success flex-1">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Complete Check-in
+                    </button>
+                    <button type="button" class="btn btn-secondary flex-1" onclick="hideModal('checkin-modal')">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Check-out Modal -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i>
+                    Visitor Check-out
+                </h3>
+                <button class="modal-close" onclick="hideModal('checkout-modal')">&times;</button>
+            </div>
+            <div id="checkout-content">
+                <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                </div>
+                
+                <div id="current-visitors-list" class="grid grid-1 gap-3 mb-4">
+                    <!-- Current visitors list will be displayed here -->
+                </div>
+                <div id="no-visitors" class="text-center py-8 text-gray-500 hidden">
+                    <p>No visitors currently checked in at this location.</p>
+                </div>
+                
+            </div>
+            <div class="flex justify-center mt-4">
+                <button class="btn btn-secondary" onclick="hideModal('checkout-modal')">
+                    <i class="fas fa-times"></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Selection Modal -->
+    <div id="location-selection-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-map-marker-alt" style="color: #3b82f6;"></i>
+                    Select Location
+                </h3>
+                <button class="modal-close" onclick="hideModal('location-selection-modal')">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-4">Please select your current location:</p>
+                <div id="location-options" class="grid grid-1 gap-3">
+                    <!-- Location options will be loaded here -->
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="save-location-preference" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save as Default Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px; width: 95%;">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-lock" style="color: #ef4444;"></i>
+                    Admin Access
+                </h3>
+                <button class="modal-close" onclick="hideModal('admin-login-modal')">&times;</button>
+            </div>
+            <div class="p-8">
+                <form id="admin-login-form">
+                    <div class="mb-6">
+                        <label class="block text-xl font-bold text-gray-700 mb-4">Password</label>
+                        <input type="password" id="admin-password" class="w-full p-12 text-4xl border-4 border-gray-400 rounded-2xl" style="height: 80px; font-size: 2rem; padding: 3rem;" placeholder="Enter admin password" autocomplete="new-password" required>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" id="admin-login-btn" class="btn btn-primary btn-xl">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 스크립트 -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/location-manager.js"></script>
+    <script src="js/admin-login.js"></script>
+    <script src="js/auto-checkout.js"></script>
+    <script src="js/checkin.js"></script>
+    <script src="js/checkout.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

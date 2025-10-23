@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Mode - Visitor Management System</title>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-cog logo-icon"></i>
+                <h1 class="logo-text">Admin Mode</h1>
+            </div>
+            <div class="flex gap-3">
+                <button id="refresh-btn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+                <button id="auto-checkout-btn" class="btn btn-warning">
+                    <i class="fas fa-clock"></i>
+                    Manual Auto Checkout
+                </button>
+                <div class="text-sm text-gray-600">
+                    <i class="fas fa-info-circle"></i>
+                    Auto checkout runs daily at 01:00 (Factory only)
+                </div>
+                <button id="logout-btn" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+                <a href="index.html" class="btn btn-secondary">
+                    <i class="fas fa-home"></i>
+                    Back to Main
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container">
+        <!-- Current Visitor Statistics -->
+        <div class="card">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-chart-bar"></i>
+                Current Visitor Status
+            </h2>
+            <div class="grid grid-3">
+                <div class="stats-card">
+                    <div class="stats-icon" style="color: #3b82f6;">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="stats-number" style="color: #3b82f6;" id="dormitory-count">0</div>
+                    <div class="stats-label">Dormitory</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon" style="color: #f59e0b;">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="stats-number" style="color: #f59e0b;" id="factory-count">0</div>
+                    <div class="stats-label">Factory</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon" style="color: #22c55e;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-number" style="color: #22c55e;" id="total-count">0</div>
+                    <div class="stats-label">Total Visitors</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Visitors List -->
+        <div class="card">
+            <h3 class="mb-4">
+                <i class="fas fa-users"></i>
+                Current Visitors List
+            </h3>
+            <div id="current-visitors-grid" class="grid grid-3">
+                <!-- Current visitors list will be displayed here -->
+            </div>
+            <div id="no-current-visitors" class="text-center py-8 text-gray-500 hidden">
+                <i class="fas fa-users text-4xl mb-4"></i>
+                <p>No visitors currently checked in.</p>
+            </div>
+        </div>
+
+        <!-- Visit Records -->
+        <div class="card">
+            <h3 class="mb-4">
+                <i class="fas fa-clipboard-list"></i>
+                Visit Records
+            </h3>
+            
+            <!-- Filter Options -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <h4 class="text-md font-medium text-gray-700 mb-4">Filter Options</h4>
+                <div class="grid grid-4 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Category</label>
+                        <select id="category-filter" class="form-select">
+                            <option value="all">All</option>
+                            <option value="dormitory">Dormitory</option>
+                            <option value="factory">Factory</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Visitor Search</label>
+                        <input type="text" id="visitor-search" placeholder="Search by name..." class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Location Search</label>
+                        <input type="text" id="location-search" placeholder="Search by location..." class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Purpose</label>
+                        <select id="purpose-filter" class="form-select">
+                            <option value="all">All</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="delivery">Delivery</option>
+                            <option value="inspection">Inspection</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-3 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="start-date" class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">End Date</label>
+                        <input type="date" id="end-date" class="form-input">
+                    </div>
+                    <div>
+                        <label class="form-label">Sort</label>
+                        <select id="sort-filter" class="form-select">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="name">Name</option>
+                            <option value="location">Location</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                        <button id="apply-filters" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Apply Filters
+                        </button>
+                        <button id="clear-filters" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Clear
+                        </button>
+                        <button id="export-logs" class="btn btn-success">
+                            <i class="fas fa-download"></i>
+                            Export
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        Total <span id="log-count">0</span> records
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Log Table -->
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Check-in Time</th>
+                            <th>Check-out Time</th>
+                            <th>Company</th>
+                            <th>Phone</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <!-- Visit records will be displayed here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Location Management -->
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3>
+                    <i class="fas fa-map-marker-alt"></i>
+                    Location Management
+                </h3>
+                <button id="add-location-btn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Location
+                </button>
+            </div>
+            
+            <div id="locations-list" class="grid grid-2 gap-4">
+                <!-- Location list will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Frequent Visitors Management -->
+        <div class="card">
+            <h3 class="mb-4">
+                <i class="fas fa-star"></i>
+                Frequent Visitors Management
+            </h3>
+            
+            <div class="grid grid-2 gap-4 mb-4">
+                <input type="text" id="frequent-last-name" placeholder="Last Name" class="form-input">
+                <input type="text" id="frequent-first-name" placeholder="First Name" class="form-input">
+            </div>
+            <div class="grid grid-2 gap-4 mb-4">
+                <input type="text" id="frequent-company" placeholder="Company" class="form-input">
+                <input type="text" id="frequent-phone" placeholder="Phone Number" class="form-input">
+            </div>
+            <button id="add-frequent-visitor-btn" class="btn btn-primary mb-4">
+                <i class="fas fa-plus"></i>
+                Add Frequent Visitor
+            </button>
+            
+            <div id="frequent-visitors-list" class="grid grid-1 gap-2">
+                <!-- Frequent visitors list will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Location Modal -->
+    <div id="add-location-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Add Location
+                </h3>
+                <button class="modal-close" onclick="hideModal('add-location-modal')">&times;</button>
+            </div>
+            <form id="add-location-form">
+                <div class="form-group">
+                    <label class="form-label">Location Name</label>
+                    <input type="text" name="name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select" required>
+                        <option value="dormitory">Dormitory</option>
+                        <option value="factory">Factory</option>
+                    </select>
+                </div>
+                <div class="grid grid-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">Latitude</label>
+                        <input type="number" name="latitude" step="0.000001" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Longitude</label>
+                        <input type="number" name="longitude" step="0.000001" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Radius (km)</label>
+                    <input type="number" name="radius" step="0.1" min="0.1" max="10" value="0.1" class="form-input" required>
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-primary flex-1">
+                        <i class="fas fa-plus"></i>
+                        Add
+                    </button>
+                    <button type="button" class="btn btn-secondary flex-1" onclick="hideModal('add-location-modal')">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 스크립트 -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/admin-login.js"></script>
+    <script src="js/auto-checkout.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
