@@ -28,24 +28,25 @@ class CheckinManager {
      * 체크인 모달 표시
      */
     async showCheckinModal() {
-        // 저장된 위치가 있으면 사용
-        if (window.locationManager && window.locationManager.savedLocation) {
+        // 현재 선택된 위치가 있으면 그대로 사용 (위치 감지하지 않음)
+        const currentLocation = window.locationManager.selectedLocation || window.locationManager.savedLocation;
+        if (currentLocation) {
             updateLocationStatus(
-                `${window.locationManager.savedLocation.name} (${window.locationManager.savedLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
+                `${currentLocation.name} (${currentLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
                 'success'
             );
             showModal('checkin-modal');
             return;
         }
 
-        // Location Change가 비활성화되어 있으면 GPS 사용하지 않음
+        // 위치가 없을 때만 위치 감지 또는 수동 선택 요청
         if (!window.locationManager.locationChangeEnabled) {
-            updateLocationStatus('Location Change is OFF - Please enable to detect location', 'warning');
-            showNotification('Location Change Required', 'Please enable Location Change to detect your location', 'warning');
+            updateLocationStatus('No location selected - Please select manually', 'warning');
+            showNotification('Location Required', 'Please select your current location manually', 'warning');
             return;
         }
 
-        // 위치 감지 시작
+        // Location Change가 활성화되어 있고 위치가 없을 때만 GPS 감지
         updateLocationStatus('Detecting location...', 'loading');
         
         try {
