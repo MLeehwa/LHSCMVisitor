@@ -31,10 +31,21 @@ class CheckinManager {
         // 현재 선택된 위치가 있으면 그대로 사용 (위치 감지하지 않음)
         const currentLocation = window.locationManager.selectedLocation || window.locationManager.savedLocation;
         if (currentLocation) {
+            // VisitorSystem 데이터 업데이트
+            window.VisitorSystem.data.detectedCategory = currentLocation.category;
+            window.VisitorSystem.data.currentLocation = currentLocation;
+            
             updateLocationStatus(
                 `${currentLocation.name} (${currentLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
                 'success'
             );
+            
+            // 자주 방문하는 방문자 로드
+            await this.loadFrequentVisitors();
+            
+            // 폼 필드 업데이트
+            this.updateFormFieldsForCategory();
+            
             showModal('checkin-modal');
             return;
         }
