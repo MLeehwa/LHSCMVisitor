@@ -10,6 +10,7 @@ class LocationManager {
         console.log('Location Change enabled:', this.locationChangeEnabled);
         this.setupEventListeners();
         this.updateLocationChangeUI();
+        this.initializeManualButton();
     }
 
     /**
@@ -209,6 +210,17 @@ class LocationManager {
     }
 
     /**
+     * Manual 버튼 초기화
+     */
+    initializeManualButton() {
+        const manualBtn = document.getElementById('manual-location-btn');
+        if (manualBtn) {
+            manualBtn.disabled = false;
+            console.log('Manual button initialized and enabled');
+        }
+    }
+
+    /**
      * 저장된 위치 사용
      */
     useSavedLocation() {
@@ -275,8 +287,8 @@ class LocationManager {
         updateLocationStatus('Location detection failed. Please select manually.', 'warning');
         showNotification('Location Required', 'Please select your current location', 'warning');
         
-        // 수동 선택 버튼 표시
-        document.getElementById('manual-location-btn').classList.remove('hidden');
+        // 수동 선택 버튼 활성화
+        document.getElementById('manual-location-btn').disabled = false;
     }
 }
 
