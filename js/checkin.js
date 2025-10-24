@@ -160,8 +160,21 @@ class CheckinManager {
             return;
         }
 
+        // 현재 선택된 위치 정보 가져오기
+        const currentLocation = window.locationManager.selectedLocation || window.locationManager.savedLocation;
+        const currentCategory = currentLocation ? currentLocation.category : window.VisitorSystem.data.detectedCategory;
+        const locationName = currentLocation ? currentLocation.name : 'Current Location';
+        
+        console.log('Check-in location info:', {
+            selectedLocation: window.locationManager.selectedLocation,
+            savedLocation: window.locationManager.savedLocation,
+            currentLocation: currentLocation,
+            currentCategory: currentCategory,
+            locationName: locationName
+        });
+
         // 공장 방문 시 추가 검증
-        if (window.VisitorSystem.data.detectedCategory === 'factory') {
+        if (currentCategory === 'factory') {
             if (!formData.company || !formData.phone) {
                 showNotification('Input Error', 'Company name and phone number are required for factory visits', 'error');
                 return;
@@ -175,8 +188,8 @@ class CheckinManager {
             company: formData.company || '',
             phone: formData.phone || '',
             purpose: formData.purpose || 'other',
-            category: window.VisitorSystem.data.detectedCategory,
-            location_name: window.VisitorSystem.data.currentLocation ? 'Current Location' : 'Manual Selection'
+            category: currentCategory,
+            location_name: locationName
         };
 
         try {
