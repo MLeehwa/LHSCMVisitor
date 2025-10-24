@@ -28,6 +28,23 @@ class CheckinManager {
      * 체크인 모달 표시
      */
     async showCheckinModal() {
+        // 저장된 위치가 있으면 사용
+        if (window.locationManager && window.locationManager.savedLocation) {
+            updateLocationStatus(
+                `${window.locationManager.savedLocation.name} (${window.locationManager.savedLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
+                'success'
+            );
+            showModal('checkin-modal');
+            return;
+        }
+
+        // Location Change가 비활성화되어 있으면 GPS 사용하지 않음
+        if (!window.locationManager.locationChangeEnabled) {
+            updateLocationStatus('Location Change is OFF - Please enable to detect location', 'warning');
+            showNotification('Location Change Required', 'Please enable Location Change to detect your location', 'warning');
+            return;
+        }
+
         // 위치 감지 시작
         updateLocationStatus('Detecting location...', 'loading');
         

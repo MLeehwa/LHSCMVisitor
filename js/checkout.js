@@ -29,6 +29,26 @@ class CheckoutManager {
      * 체크아웃 모달 표시
      */
     async showCheckoutModal() {
+        // 저장된 위치가 있으면 사용
+        if (window.locationManager && window.locationManager.savedLocation) {
+            updateLocationStatus(
+                `${window.locationManager.savedLocation.name} (${window.locationManager.savedLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
+                'success'
+            );
+            
+            // 현재 위치에 체크인된 방문자 로드
+            await this.loadCurrentVisitors();
+            showModal('checkout-modal');
+            return;
+        }
+
+        // Location Change가 비활성화되어 있으면 GPS 사용하지 않음
+        if (!window.locationManager.locationChangeEnabled) {
+            updateLocationStatus('Location Change is OFF - Please enable to detect location', 'warning');
+            showNotification('Location Change Required', 'Please enable Location Change to detect your location', 'warning');
+            return;
+        }
+
         // 위치 감지 시작
         updateLocationStatus('Detecting location...', 'loading');
         
