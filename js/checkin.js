@@ -39,32 +39,9 @@ class CheckinManager {
             return;
         }
 
-        // 위치가 없을 때만 위치 감지 또는 수동 선택 요청
-        if (!window.locationManager.locationChangeEnabled) {
-            updateLocationStatus('No location selected - Please select manually', 'warning');
-            showNotification('Location Required', 'Please select your current location manually', 'warning');
-            return;
-        }
-
-        // Location Change가 활성화되어 있고 위치가 없을 때만 GPS 감지
-        updateLocationStatus('Detecting location...', 'loading');
-        
-        try {
-            const result = await detectLocationAndCategory();
-            if (result.success) {
-                updateLocationStatus(
-                    `${result.location.name} (${result.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
-                    'success'
-                );
-            } else {
-                // 위치 감지 실패 시 수동 선택 옵션 제공
-                window.locationManager.handleLocationDetectionFailure();
-                showNotification('Location Required', 'Please select your current location', 'warning');
-            }
-        } catch (error) {
-            updateLocationStatus(error.message, 'error');
-            showNotification('Location Error', error.message, 'error');
-        }
+        // 위치가 없으면 수동 선택 요청
+        updateLocationStatus('No location selected - Please select manually', 'warning');
+        showNotification('Location Required', 'Please select your current location manually', 'warning');
 
         // 자주 방문하는 방문자 로드
         await this.loadFrequentVisitors();

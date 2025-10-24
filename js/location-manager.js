@@ -6,10 +6,7 @@ class LocationManager {
     constructor() {
         this.selectedLocation = null;
         this.savedLocation = this.loadSavedLocation();
-        this.locationChangeEnabled = this.loadLocationChangeSetting();
-        console.log('Location Change enabled:', this.locationChangeEnabled);
         this.setupEventListeners();
-        this.updateLocationChangeUI();
         this.initializeManualButton();
     }
 
@@ -17,11 +14,6 @@ class LocationManager {
      * 이벤트 리스너 설정
      */
     setupEventListeners() {
-        // GPS 새로고침 버튼
-        document.getElementById('refresh-gps-btn').addEventListener('click', () => {
-            this.refreshGPSLocation();
-        });
-
         // 수동 위치 선택 버튼
         document.getElementById('manual-location-btn').addEventListener('click', () => {
             this.showLocationSelectionModal();
@@ -30,11 +22,6 @@ class LocationManager {
         // 위치 저장 버튼
         document.getElementById('save-location-preference').addEventListener('click', () => {
             this.saveLocationPreference();
-        });
-
-        // Location Change 토글 버튼
-        document.getElementById('location-change-toggle').addEventListener('click', () => {
-            this.toggleLocationChange();
         });
     }
 
@@ -168,51 +155,6 @@ class LocationManager {
         }
     }
 
-    /**
-     * Location Change 설정 로드
-     */
-    loadLocationChangeSetting() {
-        const saved = localStorage.getItem('visitorSystem_locationChangeEnabled');
-        return saved === 'true';
-    }
-
-    /**
-     * Location Change 설정 저장
-     */
-    saveLocationChangeSetting(enabled) {
-        localStorage.setItem('visitorSystem_locationChangeEnabled', enabled.toString());
-        this.locationChangeEnabled = enabled;
-    }
-
-    /**
-     * Location Change 토글
-     */
-    toggleLocationChange() {
-        console.log('Location Change toggle clicked!');
-        const newState = !this.locationChangeEnabled;
-        console.log('New state:', newState);
-        this.saveLocationChangeSetting(newState);
-        this.updateLocationChangeUI();
-        
-        const status = newState ? 'ON' : 'OFF';
-        showNotification('Location Change', `Location Change is now ${status}`, 'info');
-    }
-
-    /**
-     * Location Change UI 업데이트
-     */
-    updateLocationChangeUI() {
-        const button = document.getElementById('location-change-toggle');
-        const text = document.getElementById('location-change-text');
-        
-        if (this.locationChangeEnabled) {
-            button.className = 'btn btn-sm btn-success';
-            text.textContent = 'Location Change: ON';
-        } else {
-            button.className = 'btn btn-sm btn-warning';
-            text.textContent = 'Location Change: OFF';
-        }
-    }
 
     /**
      * Manual 버튼 초기화
@@ -240,86 +182,6 @@ class LocationManager {
         return false;
     }
 
-    /**
-     * GPS 위치 새로고침
-     */
-    async refreshGPSLocation() {
-        updateLocationStatus('Refreshing GPS location...', 'loading');
-        
-        try {
-            // GPS 위치 직접 가져오기
-            const gpsLocation = await getCurrentLocation();
-            console.log('GPS Location detected:', gpsLocation);
-            
-            // 위치 목록 가져오기
-            const locations = await apiRequest('/locations');
-            console.log('Available locations:', locations);
-            
-            // 가장 가까운 위치 찾기
-            const nearestLocation = findNearestLocation(
-                gpsLocation.latitude,
-                gpsLocation.longitude,
-                locations
-            );
-            
-            if (nearestLocation) {
-                // 거리 계산
-                const distance = calculateDistance(
-                    gpsLocation.latitude,
-                    gpsLocation.longitude,
-                    nearestLocation.latitude,
-                    nearestLocation.longitude
-                );
-                
-                console.log('Nearest location found:', {
-                    location: nearestLocation,
-                    distance: distance,
-                    gpsAccuracy: gpsLocation.accuracy
-                });
-                
-                // 새로운 위치 정보 저장
-                this.saveLocation(nearestLocation);
-                
-                // 정확도에 따른 메시지
-                let accuracyMessage = '';
-                if (gpsLocation.accuracy > 100) {
-                    accuracyMessage = ' (Low accuracy - may be inaccurate)';
-                } else if (gpsLocation.accuracy > 50) {
-                    accuracyMessage = ' (Medium accuracy)';
-                } else {
-                    accuracyMessage = ' (High accuracy)';
-                }
-                
-                updateLocationStatus(
-                    `${nearestLocation.name} (${nearestLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})${accuracyMessage}`,
-                    'success'
-                );
-                
-                showNotification(
-                    'GPS Refreshed', 
-                    `Location: ${nearestLocation.name}\nDistance: ${distance.toFixed(1)}km\nAccuracy: ${gpsLocation.accuracy.toFixed(0)}m`, 
-                    'success'
-                );
-            } else {
-                updateLocationStatus('No nearby location found', 'warning');
-                showNotification('GPS Refresh Failed', 'No registered location found nearby', 'warning');
-                
-                // 실패 시 저장된 위치 사용
-                if (this.savedLocation) {
-                    this.useSavedLocation();
-                }
-            }
-        } catch (error) {
-            console.error('GPS refresh error:', error);
-            updateLocationStatus('GPS refresh error. Using saved location.', 'error');
-            showNotification('GPS Error', error.message, 'error');
-            
-            // 오류 시 저장된 위치 사용
-            if (this.savedLocation) {
-                this.useSavedLocation();
-            }
-        }
-    }
 
     /**
      * 위치 감지 실패 시 처리

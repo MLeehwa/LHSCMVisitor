@@ -43,44 +43,9 @@ class CheckoutManager {
             return;
         }
 
-        // 위치가 없을 때만 위치 감지 또는 수동 선택 요청
-        if (!window.locationManager.locationChangeEnabled) {
-            updateLocationStatus('No location selected - Please select manually', 'warning');
-            showNotification('Location Required', 'Please select your current location manually', 'warning');
-            return;
-        }
-
-        // Location Change가 활성화되어 있고 위치가 없을 때만 GPS 감지
-        updateLocationStatus('Detecting location...', 'loading');
-        
-        try {
-            const result = await detectLocationAndCategory();
-            if (result.success) {
-                updateLocationStatus(
-                    `${result.location.name} (${result.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
-                    'success'
-                );
-                
-                // 현재 위치에 체크인된 방문자 로드
-                await this.loadCurrentVisitors();
-                showModal('checkout-modal');
-            } else {
-                // 위치 감지 실패 시 수동 선택 옵션 제공
-                window.locationManager.handleLocationDetectionFailure();
-                showNotification('Location Required', 'Please select your current location', 'warning');
-                
-                // 위치를 감지할 수 없어도 모달은 표시 (빈 목록으로)
-                await this.loadCurrentVisitors();
-                showModal('checkout-modal');
-            }
-        } catch (error) {
-            updateLocationStatus(error.message, 'error');
-            showNotification('Location Error', error.message, 'error');
-            
-            // 오류가 발생해도 모달은 표시 (빈 목록으로)
-            await this.loadCurrentVisitors();
-            showModal('checkout-modal');
-        }
+        // 위치가 없으면 수동 선택 요청
+        updateLocationStatus('No location selected - Please select manually', 'warning');
+        showNotification('Location Required', 'Please select your current location manually', 'warning');
     }
 
     /**
