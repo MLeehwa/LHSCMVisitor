@@ -160,14 +160,17 @@ class CheckinManager {
             return;
         }
 
-        // 현재 선택된 위치 정보 가져오기
-        const currentLocation = window.locationManager.selectedLocation || window.locationManager.savedLocation;
+        // 현재 선택된 위치 정보 가져오기 (우선순위: selectedLocation > savedLocation > VisitorSystem.data)
+        const currentLocation = window.locationManager.selectedLocation || 
+                               window.locationManager.savedLocation || 
+                               window.VisitorSystem.data.currentLocation;
         const currentCategory = currentLocation ? currentLocation.category : window.VisitorSystem.data.detectedCategory;
         const locationName = currentLocation ? currentLocation.name : 'Current Location';
         
         console.log('Check-in location info:', {
             selectedLocation: window.locationManager.selectedLocation,
             savedLocation: window.locationManager.savedLocation,
+            visitorSystemLocation: window.VisitorSystem.data.currentLocation,
             currentLocation: currentLocation,
             currentCategory: currentCategory,
             locationName: locationName

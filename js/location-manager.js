@@ -137,6 +137,9 @@ class LocationManager {
         const location = { id, name, category };
         this.selectedLocation = location;
         
+        // 선택한 위치를 저장된 위치로도 저장 (지속성 유지)
+        this.saveLocation(location);
+        
         // 위치 상태 업데이트
         updateLocationStatus(`${name} (${category === 'dormitory' ? 'Dormitory' : 'Factory'})`, 'success');
         
@@ -148,6 +151,8 @@ class LocationManager {
         hideModal('location-selection-modal');
         
         showNotification('Location Selected', `Selected: ${name}`, 'success');
+        
+        console.log('Location selected and saved:', location);
     }
 
     /**

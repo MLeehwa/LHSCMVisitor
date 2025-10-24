@@ -11,17 +11,25 @@ class MainPageManager {
      * 페이지 초기화
      */
     async initializePage() {
-        // Location Change가 비활성화되어 있고 저장된 위치가 있으면 사용
-        if (!window.locationManager.locationChangeEnabled && window.locationManager.useSavedLocation()) {
-            updateLocationStatus('Using saved location (Location Change OFF)', 'success');
-            showNotification('Location Loaded', 'Using previously saved location - GPS disabled', 'info');
-            return;
-        }
-
-        // 저장된 위치가 있으면 사용
-        if (window.locationManager && window.locationManager.useSavedLocation()) {
-            updateLocationStatus('Using saved location', 'success');
-            showNotification('Location Loaded', 'Using previously saved location', 'info');
+        // 저장된 위치가 있으면 사용 (Location Change 설정과 관계없이)
+        if (window.locationManager && window.locationManager.savedLocation) {
+            // 선택된 위치를 저장된 위치로 설정
+            window.locationManager.selectedLocation = window.locationManager.savedLocation;
+            
+            // VisitorSystem 데이터 업데이트
+            window.VisitorSystem.data.detectedCategory = window.locationManager.savedLocation.category;
+            window.VisitorSystem.data.currentLocation = window.locationManager.savedLocation;
+            
+            updateLocationStatus(
+                `${window.locationManager.savedLocation.name} (${window.locationManager.savedLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})`, 
+                'success'
+            );
+            
+            if (!window.locationManager.locationChangeEnabled) {
+                showNotification('Location Loaded', 'Using previously saved location - GPS disabled', 'info');
+            } else {
+                showNotification('Location Loaded', 'Using previously saved location', 'info');
+            }
             return;
         }
 
