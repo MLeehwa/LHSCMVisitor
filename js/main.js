@@ -11,6 +11,13 @@ class MainPageManager {
      * 페이지 초기화
      */
     async initializePage() {
+        // Location Change가 비활성화되어 있고 저장된 위치가 있으면 사용
+        if (!window.locationManager.locationChangeEnabled && window.locationManager.useSavedLocation()) {
+            updateLocationStatus('Using saved location (Location Change OFF)', 'success');
+            showNotification('Location Loaded', 'Using previously saved location - GPS disabled', 'info');
+            return;
+        }
+
         // 저장된 위치가 있으면 사용
         if (window.locationManager && window.locationManager.useSavedLocation()) {
             updateLocationStatus('Using saved location', 'success');
@@ -18,7 +25,14 @@ class MainPageManager {
             return;
         }
 
-        // 저장된 위치가 없으면 GPS로 위치 감지
+        // Location Change가 비활성화되어 있으면 GPS 사용하지 않음
+        if (!window.locationManager.locationChangeEnabled) {
+            updateLocationStatus('Location Change is OFF - Please enable to detect location', 'warning');
+            showNotification('Location Change Required', 'Please enable Location Change to detect your location', 'warning');
+            return;
+        }
+
+        // 저장된 위치가 없고 Location Change가 활성화되어 있으면 GPS로 위치 감지
         updateLocationStatus('Detecting location...', 'loading');
         
         try {

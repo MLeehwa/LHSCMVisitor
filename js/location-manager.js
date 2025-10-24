@@ -6,7 +6,10 @@ class LocationManager {
     constructor() {
         this.selectedLocation = null;
         this.savedLocation = this.loadSavedLocation();
+        this.locationChangeEnabled = this.loadLocationChangeSetting();
+        console.log('Location Change enabled:', this.locationChangeEnabled);
         this.setupEventListeners();
+        this.updateLocationChangeUI();
     }
 
     /**
@@ -26,6 +29,11 @@ class LocationManager {
         // 위치 저장 버튼
         document.getElementById('save-location-preference').addEventListener('click', () => {
             this.saveLocationPreference();
+        });
+
+        // Location Change 토글 버튼
+        document.getElementById('location-change-toggle').addEventListener('click', () => {
+            this.toggleLocationChange();
         });
     }
 
@@ -151,6 +159,52 @@ class LocationManager {
             hideModal('location-selection-modal');
         } else {
             showNotification('Error', 'Please select a location first', 'error');
+        }
+    }
+
+    /**
+     * Location Change 설정 로드
+     */
+    loadLocationChangeSetting() {
+        const saved = localStorage.getItem('visitorSystem_locationChangeEnabled');
+        return saved === 'true';
+    }
+
+    /**
+     * Location Change 설정 저장
+     */
+    saveLocationChangeSetting(enabled) {
+        localStorage.setItem('visitorSystem_locationChangeEnabled', enabled.toString());
+        this.locationChangeEnabled = enabled;
+    }
+
+    /**
+     * Location Change 토글
+     */
+    toggleLocationChange() {
+        console.log('Location Change toggle clicked!');
+        const newState = !this.locationChangeEnabled;
+        console.log('New state:', newState);
+        this.saveLocationChangeSetting(newState);
+        this.updateLocationChangeUI();
+        
+        const status = newState ? 'ON' : 'OFF';
+        showNotification('Location Change', `Location Change is now ${status}`, 'info');
+    }
+
+    /**
+     * Location Change UI 업데이트
+     */
+    updateLocationChangeUI() {
+        const button = document.getElementById('location-change-toggle');
+        const text = document.getElementById('location-change-text');
+        
+        if (this.locationChangeEnabled) {
+            button.className = 'btn btn-sm btn-success';
+            text.textContent = 'Location Change: ON';
+        } else {
+            button.className = 'btn btn-sm btn-warning';
+            text.textContent = 'Location Change: OFF';
         }
     }
 
