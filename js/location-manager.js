@@ -247,20 +247,62 @@ class LocationManager {
         updateLocationStatus('Refreshing GPS location...', 'loading');
         
         try {
-            const result = await detectLocationAndCategory();
-            if (result.success) {
+            // GPS 위치 직접 가져오기
+            const gpsLocation = await getCurrentLocation();
+            console.log('GPS Location detected:', gpsLocation);
+            
+            // 위치 목록 가져오기
+            const locations = await apiRequest('/locations');
+            console.log('Available locations:', locations);
+            
+            // 가장 가까운 위치 찾기
+            const nearestLocation = findNearestLocation(
+                gpsLocation.latitude,
+                gpsLocation.longitude,
+                locations
+            );
+            
+            if (nearestLocation) {
+                // 거리 계산
+                const distance = calculateDistance(
+                    gpsLocation.latitude,
+                    gpsLocation.longitude,
+                    nearestLocation.latitude,
+                    nearestLocation.longitude
+                );
+                
+                console.log('Nearest location found:', {
+                    location: nearestLocation,
+                    distance: distance,
+                    gpsAccuracy: gpsLocation.accuracy
+                });
+                
                 // 새로운 위치 정보 저장
-                this.saveLocation(result.location);
+                this.saveLocation(nearestLocation);
+                
+                // 정확도에 따른 메시지
+                let accuracyMessage = '';
+                if (gpsLocation.accuracy > 100) {
+                    accuracyMessage = ' (Low accuracy - may be inaccurate)';
+                } else if (gpsLocation.accuracy > 50) {
+                    accuracyMessage = ' (Medium accuracy)';
+                } else {
+                    accuracyMessage = ' (High accuracy)';
+                }
                 
                 updateLocationStatus(
-                    `${result.location.name} (${result.category === 'dormitory' ? 'Dormitory' : 'Factory'})`,
+                    `${nearestLocation.name} (${nearestLocation.category === 'dormitory' ? 'Dormitory' : 'Factory'})${accuracyMessage}`,
                     'success'
                 );
                 
-                showNotification('GPS Refreshed', `Location updated: ${result.location.name}`, 'success');
+                showNotification(
+                    'GPS Refreshed', 
+                    `Location: ${nearestLocation.name}\nDistance: ${distance.toFixed(1)}km\nAccuracy: ${gpsLocation.accuracy.toFixed(0)}m`, 
+                    'success'
+                );
             } else {
-                updateLocationStatus('GPS refresh failed. Using saved location.', 'warning');
-                showNotification('GPS Refresh Failed', result.message, 'warning');
+                updateLocationStatus('No nearby location found', 'warning');
+                showNotification('GPS Refresh Failed', 'No registered location found nearby', 'warning');
                 
                 // 실패 시 저장된 위치 사용
                 if (this.savedLocation) {
@@ -268,6 +310,7 @@ class LocationManager {
                 }
             }
         } catch (error) {
+            console.error('GPS refresh error:', error);
             updateLocationStatus('GPS refresh error. Using saved location.', 'error');
             showNotification('GPS Error', error.message, 'error');
             
